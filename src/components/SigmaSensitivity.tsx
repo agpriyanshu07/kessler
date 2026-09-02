@@ -58,13 +58,22 @@ export function SigmaSensitivity({ event }: { event: ResolvedConjunction }) {
     return out;
   }, [event]);
 
-  const l10 = Math.log10;
-  const pcs = samples.map((s) => s.pc);
+  // Floored, not bare Math.log10: at the low end of the sigma sweep some
+  // events' Pc underflows to exactly 0 (a genuine double-precision zero, not
+  // a display rounding), and log10(0) is -Infinity. That propagated into
+  // mid/half below as -Infinity plus a compensating +Infinity, i.e. NaN — and
+  // every SVG coordinate on the chart is derived from loE/hiE, so the whole
+  // plot silently stopped rendering for any event whose sweep touches zero.
+  // The floor is far below any real Pc, so it only ever bites the literal
+  // zero case; every other value passes through untouched.
+  const PC_FLOOR = 1e-300;
+  const l10 = (x: number) => Math.log10(Math.max(x, PC_FLOOR));
+  const pcs = samples.map((s) => s.pc).filter((p) => p > 0);
   // One decade of headroom either side, clamped so the axis always spans at
   // least three decades — a curve squeezed into half a decade reads as flat
   // when what it is actually saying is "this barely moves".
-  const rawLo = l10(Math.min(...pcs));
-  const rawHi = l10(Math.max(...pcs));
+  const rawLo = l10(pcs.length ? Math.min(...pcs) : PC_FLOOR);
+  const rawHi = l10(pcs.length ? Math.max(...pcs) : PC_FLOOR);
   const mid = (rawLo + rawHi) / 2;
   const half = Math.max(1.5, (rawHi - rawLo) / 2 + 0.5);
   const loE = mid - half;
