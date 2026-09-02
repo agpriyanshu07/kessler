@@ -557,7 +557,6 @@ export function Viewer() {
   }, [draw]);
 
   useEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let raf = 0;
     let last = performance.now();
     let lastText = 0;
@@ -569,8 +568,12 @@ export function Viewer() {
         offsetRef.current = (offsetRef.current + dt * +rateRef.current) % SPAN_SECONDS;
         needsDraw.current = true;
       }
-      // Idle drift, and only when idle — same guard as before.
-      if (!draggingRef.current && !reduced) {
+      // Idle drift, and only when idle — same guard as before. Read live
+      // rather than captured once at mount: prefers-reduced-motion can flip
+      // while this route is already open (devtools emulation, an OS toggle),
+      // and the rAF loop is long-lived, so a stale snapshot would keep
+      // drifting the camera after the setting turned motion off.
+      if (!draggingRef.current && !reducedMotion()) {
         azimuthRef.current += dt * AUTO_ROTATE_RAD_S;
         needsDraw.current = true;
       }
