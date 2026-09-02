@@ -99,19 +99,22 @@ function HeroHeadline() {
     >
       {HEADLINE.map((line, li) => (
         <span key={li} aria-hidden className="block">
-          {line.map((word) => {
+          {line.map((word, wi) => {
             n += 1;
             return (
-              <span key={word} className="inline-block overflow-hidden pb-[0.06em] align-bottom">
-                <span
-                  className={reduced ? 'inline-block' : 'word-in inline-block'}
-                  style={reduced ? undefined : { animationDelay: `${120 + n * 85}ms` }}
-                >
-                  {word}
+              <span key={word}>
+                <span className="inline-block overflow-hidden pb-[0.06em] align-bottom">
+                  <span
+                    className={reduced ? 'inline-block' : 'word-in inline-block'}
+                    style={reduced ? undefined : { animationDelay: `${120 + n * 85}ms` }}
+                  >
+                    {word}
+                  </span>
                 </span>
+                {wi < line.length - 1 ? ' ' : ''}
               </span>
             );
-          })}{' '}
+          })}
         </span>
       ))}
     </h1>
